@@ -2,7 +2,9 @@ from transformer.fechadura import transformer_fechadura
 
 def transformer(tree):
     match tree.data:
-        case "comando_fechadura" | "dispositivo_fechadura" | "trancar" | "destrancar" | "alerta" :
+        case "instrucao":
+            return transformer(tree.children[0])
+        case "dispositivo_fechadura" | "trancar" | "destrancar" | "alerta":
             return transformer_fechadura(tree)
         # outros casos...
         case "valor":
@@ -13,7 +15,7 @@ def transformer(tree):
                 return {"tipo": "numero", "valor": int(str(valor))}
         case "condicional":
             alvo = str(tree.children[0])
-            comparador = str(tree.children[0])
+            comparador = str(tree.children[1])
             valor = transformer(tree.children[2])
             se = transformer(tree.children[3])
             senao = transformer(tree.children[4])

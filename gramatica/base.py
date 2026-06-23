@@ -19,6 +19,7 @@ REGRA_START = r"""
     instrucao: comando_temperatura
              | comando_luminosidade
              | comando_fechadura
+             | condicional
     valor: STRING
            | NUMERO
     condicional: "SE" IDENTIFICADOR COMPARADOR valor "ENTAO" bloco "SENAO" bloco "FIM"
