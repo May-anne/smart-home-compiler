@@ -1,18 +1,3 @@
-# gramatica/luminosidade.py
-#
-# Define as regras gramaticais da DSL para o módulo de luminosidade.
-# Este arquivo é concatenado com os demais módulos em gramatica/base.py.
-#
-# Terminais usados (definidos em base.py):
-#   IDENTIFICADOR, NUMERO, COMPARADOR, TEXTO
-#
-# Palavras-chave do módulo (literais anônimas do Lark):
-#   DISPOSITIVO, DIMMER, DEFINIR_LUMINOSIDADE, LER_LUMINOSIDADE,
-#   PARA, SE, ENTAO, SENAO, FIM, ALERTA_LUZ
-#
-# NOTA: O alerta de luminosidade usa "ALERTA_LUZ" (e não "ALERTA")
-# para evitar ambiguidade gramatical com o alerta de temperatura.
-
 REGRAS_LUMINOSIDADE = r"""
     // ─── Declaração de dispositivo ───────────────────────────────────────────
     // Exemplo de uso: DISPOSITIVO quarto : DIMMER

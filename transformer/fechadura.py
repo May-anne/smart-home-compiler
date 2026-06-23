@@ -11,10 +11,9 @@ def transformer_fechadura(tree: Tree):
         case "destrancar":
             alvo = str(tree.children[0])
             senha = str(tree.children[1]).strip('"')
-            return {"acao": "destrancar", "alvo": alvo, "senha": senha}
+            return {"acao": "destrancar", "alvo": alvo, "senha": senha, "led": "verde"}
         case "alerta":
-            mensagem = str(tree.children[0]).strip('"')
-            return {"acao": "alerta", "mensagem": mensagem}
+            return {"acao": "alerta", "led": "vermelho"}
         case "verificar_senha":
             alvo = str(tree.children[0])
             senha = str(tree.children[1]).strip('"')
