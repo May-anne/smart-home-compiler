@@ -1,4 +1,6 @@
 from semantica.fechadura import semantica_fechadura
+from semantica.temperatura import semantica_temperatura
+from semantica.luminosidade import semantica_luminosidade
 
 def checar_declaracao(nome, tipo_esperado, declarados):
     if nome not in declarados:
@@ -13,12 +15,16 @@ def semantica_base(node, declarados):
 
         case "trancar" | "destrancar" | "alerta" | "verificar_senha":
             semantica_fechadura(node, declarados)
-        
-        # outros casos...
+
+        case "definir_temperatura" | "ler_temperatura" | "alerta_temperatura" | "condicional_temperatura":
+            semantica_temperatura(node, declarados)
+
+        case "definir_luminosidade" | "ler_luminosidade" | "alerta_luminosidade" | "condicional_luminosidade":
+            semantica_luminosidade(node, declarados)
 
         case "condicional":
             if node["valor"]["tipo"] == "string" and node["comparador"] != "==":
-                    raise Exception("String só aceita '=='.")
+                raise Exception("String só aceita '=='.")
 
             semantica_base(node["se"], declarados)
             semantica_base(node["senao"], declarados)
