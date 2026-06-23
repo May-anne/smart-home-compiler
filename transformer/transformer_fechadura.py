@@ -4,7 +4,7 @@ def transformer_fechadura(tree: Tree):
     match tree.data:
         case "dispositivo_fechadura":
             nome = str(tree.children[0])
-            return {"nome":nome, "tipo":"FECHADURA"}
+            return {"acao": "dispositivo", "nome":nome, "tipo":"FECHADURA"}
         case "trancar":
             alvo = str(tree.children[0])
             return {"acao": "trancar", "alvo": alvo}
