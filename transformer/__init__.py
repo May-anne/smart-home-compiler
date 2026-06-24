@@ -1,5 +1,7 @@
 from transformer.transformer_fechadura import transformer_fechadura
 from transformer.transformer_intdetector import transformer_intdetector
+from transformer.transformer_energia import transformer_energia
+from transformer.transformer_agua import transformer_agua
 
 def transformer(tree):
     match tree.data:

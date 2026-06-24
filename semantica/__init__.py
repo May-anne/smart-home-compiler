@@ -2,6 +2,8 @@ from semantica.semantica_fechadura import semantica_fechadura
 from semantica.semantica_intdetector import semantica_intdetector
 from semantica.temperatura import semantica_temperatura
 from semantica.luminosidade import semantica_luminosidade
+from semantica.semantica_energia import semantica_energia
+from semantica.semantica_agua import semantica_agua
 
 def semantica_base(node, declarados):
     
@@ -29,7 +31,25 @@ def semantica_base(node, declarados):
             | "definir_hora_funcionamento"
         ):
             semantica_intdetector(node, declarados)
-
+        case (
+            "definir_limite_energia"
+            | "registrar_consumo_energia"
+            | "ler_consumo_energia"
+            | "resetar_consumo_energia"
+            | "alerta_energia"
+            | "condicional_energia"
+        ):
+            semantica_energia(node, declarados)
+ 
+        case (
+            "definir_limite_agua"
+            | "registrar_consumo_agua"
+            | "ler_consumo_agua"
+            | "resetar_consumo_agua"
+            | "alerta_agua"
+            | "condicional_agua"
+        ):
+            semantica_agua(node, declarados)
         case "condicional":
             if node["alvo"] not in declarados:
                 raise Exception(f"{node['alvo']} não foi declarado.")
