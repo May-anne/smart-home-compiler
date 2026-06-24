@@ -1,6 +1,7 @@
 from gramatica.temperatura import REGRAS_TEMPERATURA
 from gramatica.luminosidade import REGRAS_LUMINOSIDADE
 from gramatica.fechadura import REGRAS_FECHADURA
+from gramatica.intrusion_detector import REGRAS_INTRUSIONDETECTOR
 
 TOKENS_COMPARTILHADOS = r"""
     IDENTIFICADOR: /[a-z_][a-z0-9_]*/
@@ -19,8 +20,9 @@ REGRA_START = r"""
     instrucao: comando_temperatura
              | comando_luminosidade
              | comando_fechadura
+             | comando_intrusao
              | condicional
-    valor: STRING
+    valor: TEXTO
            | NUMERO
     condicional: "SE" IDENTIFICADOR COMPARADOR valor "ENTAO" bloco "SENAO" bloco "FIM"
     bloco: comando+
@@ -32,5 +34,6 @@ GRAMATICA_COMPLETA = (
     + REGRAS_TEMPERATURA
     + REGRAS_LUMINOSIDADE
     + REGRAS_FECHADURA
+    + REGRAS_INTRUSIONDETECTOR
     + REGRA_START
 )

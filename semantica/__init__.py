@@ -1,4 +1,5 @@
 from semantica.semantica_fechadura import semantica_fechadura
+from semantica.semantica_intdetector import semantica_intdetector
 from semantica.temperatura import semantica_temperatura
 from semantica.luminosidade import semantica_luminosidade
 
@@ -16,6 +17,18 @@ def semantica_base(node, declarados):
 
         case "definir_luminosidade" | "ler_luminosidade" | "alerta_luminosidade" | "condicional_luminosidade":
             semantica_luminosidade(node, declarados)
+
+        case (
+            "configurar_detector"
+            | "armar_detector"
+            | "desarmar_detector"
+            | "detectar_presenca"
+            | "informar_senha"
+            | "timeout_expirado"
+            | "disparar_alarme"
+            | "definir_hora_funcionamento"
+        ):
+            semantica_intdetector(node, declarados)
 
         case "condicional":
             if node["alvo"] not in declarados:

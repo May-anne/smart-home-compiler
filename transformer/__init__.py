@@ -1,4 +1,5 @@
 from transformer.transformer_fechadura import transformer_fechadura
+from transformer.transformer_intdetector import transformer_intdetector
 
 def transformer(tree):
     match tree.data:
@@ -6,6 +7,19 @@ def transformer(tree):
             return transformer(tree.children[0])
         case "dispositivo_fechadura" | "trancar" | "destrancar" | "alerta":
             return transformer_fechadura(tree)
+        case (
+            "comando_intrusao"
+            | "dispositivo_intrusao"
+            | "configurar_detector"
+            | "armar_detector"
+            | "desarmar_detector"
+            | "detectar_presenca"
+            | "informar_senha"
+            | "timeout_expirado"
+            | "disparar_alarme"
+            | "definir_hora_funcionamento"
+        ):
+            return transformer_intdetector(tree)
         # outros casos...
         case "valor":
             valor = tree.children[0]
