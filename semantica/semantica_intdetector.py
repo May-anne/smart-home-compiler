@@ -1,11 +1,4 @@
-def checar_declaracao(nome, tipo_esperado, declarados):
-    if nome not in declarados:
-        raise Exception(f"{nome} não foi declarado.")
-    if declarados[nome] != tipo_esperado:
-        raise Exception(
-            f"{nome} é {declarados[nome]}, o esperado é {tipo_esperado}."
-        )
-
+from semantica.utils import checar_declaracao
 
 def semantica_intdetector(node, declarados):
     match node["acao"]:

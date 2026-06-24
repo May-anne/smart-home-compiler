@@ -1,16 +1,7 @@
-def checar_declaracao(nome, tipo_esperado, declarados):
-    if nome not in declarados:
-        raise Exception(f"{nome} não foi declarado.")
-    if declarados[nome] != tipo_esperado:
-        raise Exception(f"{nome} é {declarados[nome]}, o esperado é {tipo_esperado}.")
-
+from semantica.utils import checar_declaracao
 
 def semantica_agua(node, declarados):
-    match node["acao"]:
-        case "dispositivo_medidor_agua":
-            declarados[node["nome"]] = "MEDIDOR_AGUA"
-            node["tipo"] = "void"
-
+    match node["acao"]:  
         case "definir_limite_agua":
             checar_declaracao(node["alvo"], "MEDIDOR_AGUA", declarados)
             if node["valor"] < 0:
