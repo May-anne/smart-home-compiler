@@ -6,6 +6,14 @@ from semantica.energia import semantica_energia
 from semantica.agua import semantica_agua
 
 
+CAMPOS_INTRUSION_DETECTOR = {
+    "timeout_alarm": "int",
+    "passkey": "string",
+    "start_time": "string",
+    "end_time": "string",
+    "person_detected": "bool",
+}
+
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
     "TERMOSTATO": {">", "<", ">=", "<=", "=="},
@@ -36,7 +44,7 @@ def semantica_device(node, declarados, tipos_definidos):
 
     if nome in declarados:
         raise Exception(f"Dispositivo '{nome}' já foi declarado.")
-    if tipo_device not in TIPOS_DEVICE_INTERNOS:
+    if tipo_device not in TIPOS_FIXOS_CONHECIDOS:
         raise Exception(f"Tipo de dispositivo desconhecido: '{tipo_device}'.")
 
     campos_por_nome = {}
@@ -73,11 +81,17 @@ def semantica_device(node, declarados, tipos_definidos):
                     f"deve ser '{tipo_esperado}', não '{tipo_recebido}'."
                 )
 
-    declarados[nome] = TIPOS_DEVICE_INTERNOS[tipo_device]
+    declarados[nome] = TIPOS_FIXOS_CONHECIDOS[tipo_device]
     tipos_definidos[nome] = node["campos"]
     node["tipo"] = "void"
 
-
+def validar_campos_extra(node):
+    for campo in node.get("campos", []):
+        tipo_campo = campo["tipo"]
+        if tipo_campo not in TIPOS_DE_CAMPO_VALIDOS:
+            raise Exception(f"Tipo de campo desconhecido: '{tipo_campo}'.")
+        
+        
 def semantica_base(node, declarados):
     match node["acao"]:
         case "dispositivo":
