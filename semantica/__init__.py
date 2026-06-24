@@ -1,9 +1,9 @@
 from semantica.semantica_fechadura import semantica_fechadura
 from semantica.semantica_intdetector import semantica_intdetector
-from semantica.temperatura import semantica_temperatura
-from semantica.luminosidade import semantica_luminosidade
-from semantica.energia import semantica_energia
-from semantica.agua import semantica_agua
+from semantica.semantica_temperatura import semantica_temperatura
+from semantica.semantica_luminosidade import semantica_luminosidade
+from semantica.semantica_energia import semantica_energia
+from semantica.semantica_agua import semantica_agua
 
 
 CAMPOS_INTRUSION_DETECTOR = {
@@ -19,13 +19,15 @@ COMPARADORES_POR_TIPO = {
     "TERMOSTATO": {">", "<", ">=", "<=", "=="},
     "DIMMER": {">", "<", ">=", "<=", "=="},
     "INTDETECTOR": {"=="},
+    "MEDIDOR_AGUA": {">", "<", ">=", "<=", "=="},
+    "MEDIDOR_ENERGIA": {">", "<", ">=", "<=", "=="},
 }
 
 TIPOS_FIXOS_CONHECIDOS = {
     "FECHADURA", "TERMOSTATO", "INTDETECTOR",
     "MEDIDOR_AGUA", "DIMMER", "MEDIDOR_ENERGIA",
 }
-
+ 
 TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
 
 def validar_comparador(tipo_dispositivo, comparador):
@@ -40,7 +42,7 @@ def validar_comparador(tipo_dispositivo, comparador):
 
 def semantica_device(node, declarados, tipos_definidos):
     nome = node["nome"]
-    tipo_device = node["tipo_device"]
+    tipo_device = node["tipo"]
 
     if nome in declarados:
         raise Exception(f"Dispositivo '{nome}' já foi declarado.")
@@ -48,7 +50,7 @@ def semantica_device(node, declarados, tipos_definidos):
         raise Exception(f"Tipo de dispositivo desconhecido: '{tipo_device}'.")
 
     campos_por_nome = {}
-    for campo in node["campos"]:
+    for campo in node.get("campos", []):
         tipo_campo = campo["tipo"]
         nome_campo = campo["nome"]
 
@@ -58,41 +60,58 @@ def semantica_device(node, declarados, tipos_definidos):
             raise Exception(f"Campo '{nome_campo}' duplicado no device '{nome}'.")
         campos_por_nome[nome_campo] = tipo_campo
 
-    if tipo_device == "intrusion_detector":
+    if tipo_device == "INTDETECTOR":
         ausentes = CAMPOS_INTRUSION_DETECTOR.keys() - campos_por_nome.keys()
         extras = campos_por_nome.keys() - CAMPOS_INTRUSION_DETECTOR.keys()
-
+ 
         if ausentes:
             raise Exception(
-                "Campos obrigatórios ausentes no intrusion_detector "
+                "Campos obrigatórios ausentes no INTDETECTOR "
                 f"'{nome}': {', '.join(sorted(ausentes))}."
             )
         if extras:
             raise Exception(
-                f"Campos inválidos no intrusion_detector '{nome}': "
+                f"Campos inválidos no INTDETECTOR '{nome}': "
                 f"{', '.join(sorted(extras))}."
             )
-
+ 
         for nome_campo, tipo_esperado in CAMPOS_INTRUSION_DETECTOR.items():
             tipo_recebido = campos_por_nome[nome_campo]
             if tipo_recebido != tipo_esperado:
                 raise Exception(
-                    f"Campo '{nome_campo}' do intrusion_detector '{nome}' "
+                    f"Campo '{nome_campo}' do INTDETECTOR '{nome}' "
                     f"deve ser '{tipo_esperado}', não '{tipo_recebido}'."
                 )
 
-    declarados[nome] = TIPOS_FIXOS_CONHECIDOS[tipo_device]
-    tipos_definidos[nome] = node["campos"]
+    declarados[nome] = tipo_device
+    tipos_definidos[nome] = node.get("campos", [])
     node["tipo"] = "void"
 
-def validar_campos_extra(node):
-    for campo in node.get("campos", []):
-        tipo_campo = campo["tipo"]
-        if tipo_campo not in TIPOS_DE_CAMPO_VALIDOS:
-            raise Exception(f"Tipo de campo desconhecido: '{tipo_campo}'.")
+def _validar_valor_condicional(tipo_alvo, valor):
+    """CORRECAO #4b: valida o intervalo do valor conforme o domínio do dispositivo."""
+    match tipo_alvo:
+        case "TERMOSTATO":
+            if not (-50 <= valor <= 100):
+                raise Exception(
+                    f"Valor '{valor}' fora do intervalo de temperatura [-50, 100]."
+                )
+        case "DIMMER":
+            if not (0 <= valor <= 100):
+                raise Exception(
+                    f"Valor '{valor}' fora do intervalo de luminosidade [0, 100]."
+                )
+        case "MEDIDOR_AGUA":
+            if valor < 0:
+                raise Exception(
+                    f"Valor '{valor}' de referência para água não pode ser negativo."
+                )
+        case "MEDIDOR_ENERGIA":
+            if valor < 0:
+                raise Exception(
+                    f"Valor '{valor}' de referência para energia não pode ser negativo."
+                )
         
-        
-def semantica_base(node, declarados):
+def semantica_base(node, declarados, senha_validada):
     match node["acao"]:
         case "dispositivo":
             tipo = node["tipo"]
@@ -100,77 +119,76 @@ def semantica_base(node, declarados):
                 raise Exception(f"Tipo de dispositivo '{tipo}' desconhecido.")
             if node["nome"] in declarados:
                 raise Exception(f"Dispositivo '{node['nome']}' já foi declarado.")
-
-            validar_campos_extra(node)
             declarados[node["nome"]] = tipo
-
+ 
+        case "informar_senha":
+            semantica_fechadura(node, declarados, senha_validada)
+ 
         case "trancar" | "destrancar" | "alerta":
-            semantica_fechadura(node, declarados)
-
+            semantica_fechadura(node, declarados, senha_validada)
+ 
         case (
             "definir_temperatura"
             | "ler_temperatura"
             | "alerta_temperatura"
-            | "condicional_temperatura"
         ):
             semantica_temperatura(node, declarados)
-
+ 
         case (
             "definir_luminosidade"
             | "ler_luminosidade"
             | "alerta_luminosidade"
-            | "condicional_luminosidade"
         ):
             semantica_luminosidade(node, declarados)
-
+ 
         case (
             "configurar_detector"
             | "armar_detector"
             | "desarmar_detector"
             | "detectar_presenca"
-            | "informar_senha"
             | "timeout_expirado"
             | "disparar_alarme"
             | "definir_hora_funcionamento"
         ):
             semantica_intdetector(node, declarados)
-
+ 
         case (
             "definir_limite_energia"
             | "registrar_consumo_energia"
             | "ler_consumo_energia"
             | "resetar_consumo_energia"
             | "alerta_energia"
-            | "condicional_energia"
         ):
             semantica_energia(node, declarados)
-
+ 
         case (
             "definir_limite_agua"
             | "registrar_consumo_agua"
             | "ler_consumo_agua"
             | "resetar_consumo_agua"
             | "alerta_agua"
-            | "condicional_agua"
         ):
             semantica_agua(node, declarados)
-
+ 
         case "condicional":
             if node["alvo"] not in declarados:
-                raise Exception(f"{node['alvo']} não foi declarado.")
-
+                raise Exception(f"'{node['alvo']}' não foi declarado.")
+ 
             tipo_alvo = declarados[node["alvo"]]
             validar_comparador(tipo_alvo, node["comparador"])
-
+            
+            valor_num = node["valor"]["valor"]
+            _validar_valor_condicional(tipo_alvo, valor_num)
+ 
             if node["valor"]["tipo"] == "string" and node["comparador"] != "==":
-                raise Exception("String só aceita '=='.")
-
+                raise Exception("Comparação com string só aceita '=='.")
+ 
             for item in node["se"]:
-                semantica_base(item, declarados)
+                semantica_base(item, declarados, senha_validada)
             for item in node["senao"]:
-                semantica_base(item, declarados)
-
+                semantica_base(item, declarados, senha_validada)
+ 
             node["tipo"] = "bool"
-
+ 
         case _:
-            raise Exception(f"Nó desconhecido '{node}'")
+            raise Exception(f"Nó desconhecido: '{node['acao']}'")

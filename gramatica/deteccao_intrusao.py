@@ -1,13 +1,5 @@
 REGRAS_INTRUSIONDETECTOR = r"""
-    comando_intrusao: configurar_detector
-                    | armar_detector
-                    | desarmar_detector
-                    | detectar_presenca
-                    | informar_senha
-                    | timeout_expirado
-                    | disparar_alarme
-                    | definir_hora_funcionamento
-
+    
     configurar_detector: "CONFIGURAR" IDENTIFICADOR "COM" "TIMEOUT" NUMERO "SEGUNDOS" "E" "CODIGO" TEXTO
 
     armar_detector: "ARMAR" IDENTIFICADOR
@@ -24,5 +16,12 @@ REGRAS_INTRUSIONDETECTOR = r"""
 
     definir_hora_funcionamento: "DEFINIR_HORA_FUNCIONAMENTO" IDENTIFICADOR "DAS" HORA "AS" HORA
 
-    HORA: /(?:[01][0-9]|2[0-3]):[0-5][0-9]/
+    comando_intrusao: configurar_detector
+                    | armar_detector
+                    | desarmar_detector
+                    | detectar_presenca
+                    | informar_senha
+                    | timeout_expirado
+                    | disparar_alarme
+                    | definir_hora_funcionamento                  
 """

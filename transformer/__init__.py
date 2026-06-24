@@ -1,13 +1,21 @@
 from transformer.transformer_fechadura import transformer_fechadura
 from transformer.transformer_intdetector import transformer_intdetector
-from transformer.agua import transformer_agua
-from transformer.energia import transformer_energia
+from transformer.transformer_agua import transformer_agua
+from transformer.transformer_energia import transformer_energia
+from transformer.transformer_temperatura import transformer_temperatura
+from transformer.transformer_luminosidade import transformer_luminosidade
 
 def transformer(tree):
     match tree.data:
         case "instrucao":
             return transformer(tree.children[0])
-        case "dispositivo_fechadura" | "trancar" | "destrancar" | "alerta":
+        case (
+            "comando_fechadura" 
+            | "informar_senha_fechadura" 
+            | "trancar" 
+            | "destrancar" 
+            | "alerta"
+        ):
             return transformer_fechadura(tree)
         case (
             "comando_intrusao"
@@ -29,7 +37,6 @@ def transformer(tree):
             | "ler_consumo_agua"
             | "resetar_consumo_agua"
             | "alerta_agua"
-            | "condicional_agua"
         ):
             return transformer_agua(tree)
         case (
@@ -40,9 +47,24 @@ def transformer(tree):
              | "ler_consumo_energia"
              | "resetar_consumo_energia"
              | "alerta_energia"
-             | "condicional_energia"
         ):
             return transformer_energia(tree)
+        
+        case ( 
+            "comando_temperatura" 
+            | "definir_temperatura" 
+            | "ler_temperatura" 
+            | "alerta_temperatura"
+        ):
+            return transformer_temperatura(tree)
+
+        case (
+            "comando_luminosidade" 
+            | "definir_luminosidade" 
+            | "ler_luminosidade" 
+            | "alerta_luminosidade"
+        ):
+            return transformer_luminosidade(tree)
         
         case "device":
             nome_instancia = str(tree.children[0])

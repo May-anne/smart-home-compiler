@@ -1,8 +1,12 @@
 REGRAS_DEVICE = r"""
     device: "device" IDENTIFICADOR "{" tipo campo* "}"
+    
     tipo: "type" TIPO_DEVICE ";"
+    
     campo: TIPO_CAMPO IDENTIFICADOR ";"
+    
     TIPO_CAMPO: "bool" | "int" | "string" | "float"
+    
     TIPO_DEVICE: "FECHADURA" | "TERMOSTATO" | "INTDETECTOR"
                | "MEDIDOR_AGUA" | "DIMMER" | "MEDIDOR_ENERGIA"
 """

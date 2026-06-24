@@ -21,15 +21,5 @@ def semantica_luminosidade(node, declarados):
         case "alerta_luminosidade":
             node["tipo"] = "void"
 
-        case "condicional_luminosidade":
-            checar_declaracao(node["alvo"], "DIMMER", declarados)
-            if not (0 <= node["valor"] <= 100):
-                raise Exception(
-                    f"Valor de referência '{node['valor']}' na condicional fora do intervalo [0, 100]."
-                )
-            semantica_luminosidade(node["se_verdadeiro"], declarados)
-            semantica_luminosidade(node["se_falso"], declarados)
-            node["tipo"] = "bool"
-
         case _:
             raise Exception(f"Nó desconhecido em luminosidade: '{node['acao']}'")
