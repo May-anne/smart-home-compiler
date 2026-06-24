@@ -5,11 +5,60 @@ from semantica.luminosidade import semantica_luminosidade
 from semantica.semantica_energia import semantica_energia
 from semantica.semantica_agua import semantica_agua
 
-def semantica_base(node, declarados):
-    
+COMPARADORES_POR_TIPO = {
+    "FECHADURA": {"=="},
+    "TEMPERATURA": {">", "<", ">=", "<=", "=="},
+    "LUMINOSIDADE": {">", "<", ">=", "<=", "=="},
+    "INTRUSAO": {"=="},
+}
+
+TIPOS_FIXOS_CONHECIDOS = {"FECHADURA", "TEMPERATURA", "LUMINOSIDADE", "INTRUSAO", "ENERGIA", "AGUA"}
+
+TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
+
+def validar_comparador(tipo_dispositivo, comparador):
+    permitidos = COMPARADORES_POR_TIPO.get(tipo_dispositivo)
+    if permitidos is None:
+        raise Exception(f"Tipo '{tipo_dispositivo}' não tem regras de comparação definidas.")
+    if comparador not in permitidos:
+        raise Exception(f"{tipo_dispositivo} não aceita comparador '{comparador}'.")
+
+
+def semantica_device(node, tipos_definidos):
+    nome_tipo = node["nome"]
+
+    if nome_tipo in tipos_definidos:
+        raise Exception(f"Tipo de dispositivo '{nome_tipo}' já foi definido.")
+
+    nomes_campos = set()
+    for campo in node["campos"]:
+        if campo["tipo"] not in TIPOS_DE_CAMPO_VALIDOS:
+            raise Exception(f"Tipo de campo desconhecido: '{campo['tipo']}'.")
+        if campo["nome"] in nomes_campos:
+            raise Exception(
+                f"Campo '{campo['nome']}' duplicado no device '{nome_tipo}'."
+            )
+        nomes_campos.add(campo["nome"])
+
+    tipos_definidos[nome_tipo] = node["campos"]
+
+
+def semantica_base(node, declarados, tipos_definidos=None):
+    if tipos_definidos is None:
+        tipos_definidos = {}
+
     match node["acao"]:
+        case "definir_tipo":
+            semantica_device(node, tipos_definidos)
+
         case "dispositivo":
-            declarados[node["nome"]] = node["tipo"]
+            tipo = node["tipo"]
+            if tipo not in TIPOS_FIXOS_CONHECIDOS and tipo not in tipos_definidos:
+                raise Exception(
+                    f"Tipo de dispositivo '{tipo}' não foi declarado "
+                    f"(nem é um tipo fixo, nem foi definido com 'device {tipo} {{...}}')."
+                )
+            declarados[node["nome"]] = tipo
 
         case "trancar" | "destrancar" | "alerta":
             semantica_fechadura(node, declarados)
@@ -40,7 +89,7 @@ def semantica_base(node, declarados):
             | "condicional_energia"
         ):
             semantica_energia(node, declarados)
- 
+
         case (
             "definir_limite_agua"
             | "registrar_consumo_agua"
@@ -55,17 +104,15 @@ def semantica_base(node, declarados):
                 raise Exception(f"{node['alvo']} não foi declarado.")
 
             tipo_alvo = declarados[node["alvo"]]
-
-            if tipo_alvo in ("FECHADURA",) and node["comparador"] != "==":
-                raise Exception(f"{tipo_alvo} só aceita comparador '=='.")
+            validar_comparador(tipo_alvo, node["comparador"])
 
             if node["valor"]["tipo"] == "string" and node["comparador"] != "==":
                 raise Exception("String só aceita '=='.")
 
             for item in node["se"]:
-                semantica_base(item, declarados)
+                semantica_base(item, declarados, tipos_definidos)
             for item in node["senao"]:
-                semantica_base(item, declarados)
+                semantica_base(item, declarados, tipos_definidos)
 
             node["tipo"] = "bool"
 

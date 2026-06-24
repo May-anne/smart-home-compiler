@@ -18,7 +18,7 @@ TOKENS_COMPARTILHADOS = r"""
 """
 
 REGRA_START = r"""
-    start: instrucao+
+    start: (device | instrucao)+
     instrucao: comando_temperatura
              | comando_luminosidade
              | comando_fechadura
@@ -29,8 +29,7 @@ REGRA_START = r"""
     valor: TEXTO
            | NUMERO
     condicional: "SE" IDENTIFICADOR COMPARADOR valor "ENTAO" bloco "SENAO" bloco "FIM"
-    bloco: comando+
-
+    bloco: instrucao+
 """
 
 GRAMATICA_COMPLETA = (

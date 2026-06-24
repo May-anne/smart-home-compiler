@@ -1,0 +1,5 @@
+REGRAS_DEVICE = r"""
+    device: "device" IDENTIFICADOR "{" campo* "}"
+    campo: TIPO_CAMPO IDENTIFICADOR ";"
+    TIPO_CAMPO: "bool" | "int" | "string" | "float"
+"""

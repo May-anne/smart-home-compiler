@@ -23,6 +23,18 @@ def transformer(tree):
         ):
             return transformer_intdetector(tree)
         # outros casos...
+        case "device":
+            nome_tipo = str(tree.children[0])
+            campos = [transformer(c) for c in tree.children[1:]]
+            return {
+                "acao": "definir_tipo",
+                "nome": nome_tipo,
+                "campos": campos,
+            }
+        case "campo":
+            tipo_campo = str(tree.children[0])
+            nome_campo = str(tree.children[1])
+            return {"tipo": tipo_campo, "nome": nome_campo}
         case "valor":
             valor = tree.children[0]
             if valor.type == "TEXTO":
@@ -49,8 +61,6 @@ def transformer(tree):
             }
         case "bloco":
             return [transformer(c) for c in tree.children]
-        case "comando":
-            return transformer(tree.children[0])
         case "start":
             return [transformer(filho) for filho in tree.children]
         case _:
