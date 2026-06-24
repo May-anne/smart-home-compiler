@@ -25,10 +25,14 @@ def transformer(tree):
         # outros casos...
         case "valor":
             valor = tree.children[0]
-            if valor.type == "STRING":
+            if valor.type == "TEXTO":
                 return {"tipo": "string", "valor": str(valor).strip('"')}
             elif valor.type == "NUMERO":
-                return {"tipo": "numero", "valor": int(str(valor))}
+                    texto_num = str(valor)
+                    num = float(texto_num) if "." in texto_num else int(texto_num)
+                    return {"tipo": "numero", "valor": num}
+            else:
+                raise ValueError(f"Tipo de valor desconhecido: {valor.type}")
         case "condicional":
             alvo = str(tree.children[0])
             comparador = str(tree.children[1])
