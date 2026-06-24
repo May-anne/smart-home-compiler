@@ -38,15 +38,5 @@ def semantica_energia(node, declarados):
         case "alerta_energia":
             node["tipo"] = "void"
 
-        case "condicional_energia":
-            checar_declaracao(node["alvo"], "MEDIDOR_ENERGIA", declarados)
-            if node["valor"] < 0:
-                raise Exception(
-                    f"Valor de referência '{node['valor']}' na condicional não pode ser negativo."
-                )
-            semantica_energia(node["se_verdadeiro"], declarados)
-            semantica_energia(node["se_falso"], declarados)
-            node["tipo"] = "bool"
-
         case _:
             raise Exception(f"Nó desconhecido em energia: '{node['acao']}'")

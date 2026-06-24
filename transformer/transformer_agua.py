@@ -35,20 +35,5 @@ def transformer_agua(tree: Tree) -> dict:
             mensagem = str(tree.children[0]).strip('"')
             return {"acao": "alerta_agua", "mensagem": mensagem}
 
-        case "condicional_agua":
-            alvo = str(tree.children[0])
-            operador = str(tree.children[1])
-            valor = float(str(tree.children[2]))
-            ramo_verdadeiro = transformer_agua(tree.children[3])
-            ramo_falso = transformer_agua(tree.children[4])
-            return {
-                "acao": "condicional_agua",
-                "alvo": alvo,
-                "operador": operador,
-                "valor": valor,
-                "se_verdadeiro": ramo_verdadeiro,
-                "se_falso": ramo_falso,
-            }
-
         case _:
             raise ValueError(f"Nó desconhecido em água: '{tree.data}'")

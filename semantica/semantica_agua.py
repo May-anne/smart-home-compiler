@@ -38,15 +38,5 @@ def semantica_agua(node, declarados):
         case "alerta_agua":
             node["tipo"] = "void"
 
-        case "condicional_agua":
-            checar_declaracao(node["alvo"], "MEDIDOR_AGUA", declarados)
-            if node["valor"] < 0:
-                raise Exception(
-                    f"Valor de referência '{node['valor']}' na condicional não pode ser negativo."
-                )
-            semantica_agua(node["se_verdadeiro"], declarados)
-            semantica_agua(node["se_falso"], declarados)
-            node["tipo"] = "bool"
-
         case _:
             raise Exception(f"Nó desconhecido em água: '{node['acao']}'")

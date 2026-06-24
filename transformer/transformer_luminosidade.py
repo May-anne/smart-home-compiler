@@ -25,20 +25,5 @@ def transformer_luminosidade(tree: Tree) -> dict:
             mensagem = str(tree.children[0]).strip('"')
             return {"acao": "alerta_luminosidade", "mensagem": mensagem}
 
-        case "condicional_luminosidade":
-            alvo = str(tree.children[0])
-            operador = str(tree.children[1])
-            valor = float(str(tree.children[2]))
-            ramo_verdadeiro = transformer_luminosidade(tree.children[3])
-            ramo_falso = transformer_luminosidade(tree.children[4])
-            return {
-                "acao": "condicional_luminosidade",
-                "alvo": alvo,
-                "operador": operador,
-                "valor": valor,
-                "se_verdadeiro": ramo_verdadeiro,
-                "se_falso": ramo_falso,
-            }
-
         case _:
             raise ValueError(f"Nó desconhecido em luminosidade: '{tree.data}'")
