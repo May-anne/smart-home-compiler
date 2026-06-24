@@ -11,7 +11,6 @@ def transformer(tree):
             return transformer_fechadura(tree)
         case (
             "comando_intrusao"
-            | "dispositivo_intrusao"
             | "configurar_detector"
             | "armar_detector"
             | "desarmar_detector"
@@ -67,9 +66,9 @@ def transformer(tree):
             if valor.type == "TEXTO":
                 return {"tipo": "string", "valor": str(valor).strip('"')}
             elif valor.type == "NUMERO":
-                    texto_num = str(valor)
-                    num = float(texto_num) if "." in texto_num else int(texto_num)
-                    return {"tipo": "numero", "valor": num}
+                texto_num = str(valor)
+                num = float(texto_num) if "." in texto_num else int(texto_num)
+                return {"tipo": "numero", "valor": num}
             else:
                 raise ValueError(f"Tipo de valor desconhecido: {valor.type}")
         case "condicional":

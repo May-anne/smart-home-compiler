@@ -5,6 +5,7 @@ from semantica.luminosidade import semantica_luminosidade
 from semantica.energia import semantica_energia
 from semantica.agua import semantica_agua
 
+
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
     "TERMOSTATO": {">", "<", ">=", "<=", "=="},
@@ -19,25 +20,62 @@ TIPOS_FIXOS_CONHECIDOS = {
 
 TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
 
-
 def validar_comparador(tipo_dispositivo, comparador):
     permitidos = COMPARADORES_POR_TIPO.get(tipo_dispositivo)
     if permitidos is None:
-        raise Exception(f"Tipo '{tipo_dispositivo}' não tem regras de comparação definidas.")
+        raise Exception(
+            f"Tipo '{tipo_dispositivo}' não tem regras de comparação definidas."
+        )
     if comparador not in permitidos:
         raise Exception(f"{tipo_dispositivo} não aceita comparador '{comparador}'.")
 
 
-def validar_campos_extra(node):
-    nomes_campos = set()
+def semantica_device(node, declarados, tipos_definidos):
+    nome = node["nome"]
+    tipo_device = node["tipo_device"]
+
+    if nome in declarados:
+        raise Exception(f"Dispositivo '{nome}' já foi declarado.")
+    if tipo_device not in TIPOS_DEVICE_INTERNOS:
+        raise Exception(f"Tipo de dispositivo desconhecido: '{tipo_device}'.")
+
+    campos_por_nome = {}
     for campo in node["campos"]:
-        if campo["tipo"] not in TIPOS_DE_CAMPO_VALIDOS:
-            raise Exception(f"Tipo de campo desconhecido: '{campo['tipo']}'.")
-        if campo["nome"] in nomes_campos:
+        tipo_campo = campo["tipo"]
+        nome_campo = campo["nome"]
+
+        if tipo_campo not in TIPOS_DE_CAMPO_VALIDOS:
+            raise Exception(f"Tipo de campo desconhecido: '{tipo_campo}'.")
+        if nome_campo in campos_por_nome:
+            raise Exception(f"Campo '{nome_campo}' duplicado no device '{nome}'.")
+        campos_por_nome[nome_campo] = tipo_campo
+
+    if tipo_device == "intrusion_detector":
+        ausentes = CAMPOS_INTRUSION_DETECTOR.keys() - campos_por_nome.keys()
+        extras = campos_por_nome.keys() - CAMPOS_INTRUSION_DETECTOR.keys()
+
+        if ausentes:
             raise Exception(
-                f"Campo '{campo['nome']}' duplicado no device '{node['nome']}'."
+                "Campos obrigatórios ausentes no intrusion_detector "
+                f"'{nome}': {', '.join(sorted(ausentes))}."
             )
-        nomes_campos.add(campo["nome"])
+        if extras:
+            raise Exception(
+                f"Campos inválidos no intrusion_detector '{nome}': "
+                f"{', '.join(sorted(extras))}."
+            )
+
+        for nome_campo, tipo_esperado in CAMPOS_INTRUSION_DETECTOR.items():
+            tipo_recebido = campos_por_nome[nome_campo]
+            if tipo_recebido != tipo_esperado:
+                raise Exception(
+                    f"Campo '{nome_campo}' do intrusion_detector '{nome}' "
+                    f"deve ser '{tipo_esperado}', não '{tipo_recebido}'."
+                )
+
+    declarados[nome] = TIPOS_DEVICE_INTERNOS[tipo_device]
+    tipos_definidos[nome] = node["campos"]
+    node["tipo"] = "void"
 
 
 def semantica_base(node, declarados):
@@ -55,10 +93,20 @@ def semantica_base(node, declarados):
         case "trancar" | "destrancar" | "alerta":
             semantica_fechadura(node, declarados)
 
-        case "definir_temperatura" | "ler_temperatura" | "alerta_temperatura" | "condicional_temperatura":
+        case (
+            "definir_temperatura"
+            | "ler_temperatura"
+            | "alerta_temperatura"
+            | "condicional_temperatura"
+        ):
             semantica_temperatura(node, declarados)
 
-        case "definir_luminosidade" | "ler_luminosidade" | "alerta_luminosidade" | "condicional_luminosidade":
+        case (
+            "definir_luminosidade"
+            | "ler_luminosidade"
+            | "alerta_luminosidade"
+            | "condicional_luminosidade"
+        ):
             semantica_luminosidade(node, declarados)
 
         case (

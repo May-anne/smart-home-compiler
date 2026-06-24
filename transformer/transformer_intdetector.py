@@ -9,10 +9,6 @@ def transformer_intdetector(tree: Tree) -> dict:
         case "comando_intrusao":
             return transformer_intdetector(tree.children[0])
 
-        case "dispositivo_intrusao":
-            nome = str(tree.children[0])
-            return {"acao": "dispositivo", "nome": nome, "tipo": "INTDETECTOR"}
-
         case "configurar_detector":
             alvo = str(tree.children[0])
             timeout = float(str(tree.children[1]))

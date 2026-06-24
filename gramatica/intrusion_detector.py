@@ -1,6 +1,4 @@
 REGRAS_INTRUSIONDETECTOR = r"""
-    dispositivo_intrusao: "DISPOSITIVO" IDENTIFICADOR ":" "INTDETECTOR"
-
     comando_intrusao: configurar_detector
                     | armar_detector
                     | desarmar_detector
