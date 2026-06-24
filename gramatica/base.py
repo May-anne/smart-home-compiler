@@ -4,9 +4,10 @@ from gramatica.fechadura import REGRAS_FECHADURA
 from gramatica.intrusion_detector import REGRAS_INTRUSIONDETECTOR
 from gramatica.energia import REGRAS_ENERGIA
 from gramatica.agua import REGRAS_AGUA
+from gramatica.device import REGRAS_DEVICE
 
 TOKENS_COMPARTILHADOS = r"""
-    IDENTIFICADOR: /[a-z_][a-z0-9_]*/
+    IDENTIFICADOR: /[a-zA-Z_][a-zA-Z0-9_]*/
     NUMERO: /-?[0-9]+(?:\.[0-9]+)?/
     COMPARADOR: ">=" | "<=" | "==" | "!=" | ">" | "<"
 
@@ -40,5 +41,6 @@ GRAMATICA_COMPLETA = (
     + REGRAS_INTRUSIONDETECTOR
     + REGRAS_ENERGIA
     + REGRAS_AGUA
+    + REGRAS_DEVICE
     + REGRA_START
 )
