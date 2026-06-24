@@ -1,7 +1,7 @@
 from transformer.transformer_fechadura import transformer_fechadura
 from transformer.transformer_intdetector import transformer_intdetector
-from transformer.transformer_energia import transformer_energia
-from transformer.transformer_agua import transformer_agua
+from transformer.energia import transformer_energia
+from transformer.agua import transformer_agua
 
 def transformer(tree):
     match tree.data:
@@ -11,7 +11,6 @@ def transformer(tree):
             return transformer_fechadura(tree)
         case (
             "comando_intrusao"
-            | "dispositivo_intrusao"
             | "configurar_detector"
             | "armar_detector"
             | "desarmar_detector"
@@ -22,15 +21,18 @@ def transformer(tree):
             | "definir_hora_funcionamento"
         ):
             return transformer_intdetector(tree)
-        # outros casos...
         case "device":
-            nome_tipo = str(tree.children[0])
-            campos = [transformer(c) for c in tree.children[1:]]
+            nome = str(tree.children[0])
+            tipo_device = transformer(tree.children[1])
+            campos = [transformer(c) for c in tree.children[2:]]
             return {
-                "acao": "definir_tipo",
-                "nome": nome_tipo,
+                "acao": "declarar_device",
+                "nome": nome,
+                "tipo_device": tipo_device,
                 "campos": campos,
             }
+        case "tipo":
+            return str(tree.children[0])
         case "campo":
             tipo_campo = str(tree.children[0])
             nome_campo = str(tree.children[1])
@@ -40,9 +42,9 @@ def transformer(tree):
             if valor.type == "TEXTO":
                 return {"tipo": "string", "valor": str(valor).strip('"')}
             elif valor.type == "NUMERO":
-                    texto_num = str(valor)
-                    num = float(texto_num) if "." in texto_num else int(texto_num)
-                    return {"tipo": "numero", "valor": num}
+                texto_num = str(valor)
+                num = float(texto_num) if "." in texto_num else int(texto_num)
+                return {"tipo": "numero", "valor": num}
             else:
                 raise ValueError(f"Tipo de valor desconhecido: {valor.type}")
         case "condicional":

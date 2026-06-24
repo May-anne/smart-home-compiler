@@ -2,45 +2,93 @@ from semantica.semantica_fechadura import semantica_fechadura
 from semantica.semantica_intdetector import semantica_intdetector
 from semantica.temperatura import semantica_temperatura
 from semantica.luminosidade import semantica_luminosidade
-from semantica.semantica_energia import semantica_energia
-from semantica.semantica_agua import semantica_agua
+from semantica.energia import semantica_energia
+from semantica.agua import semantica_agua
+
 
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
     "TEMPERATURA": {">", "<", ">=", "<=", "=="},
     "LUMINOSIDADE": {">", "<", ">=", "<=", "=="},
-    "INTRUSAO": {"=="},
+    "INTDETECTOR": {"=="},
 }
 
-TIPOS_FIXOS_CONHECIDOS = {"FECHADURA", "TEMPERATURA", "LUMINOSIDADE", "INTRUSAO", "ENERGIA", "AGUA"}
-
 TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
+
+TIPOS_DEVICE_INTERNOS = {
+    "intrusion_detector": "INTDETECTOR",
+    "locker": "FECHADURA",
+    "temp_sensor": "TERMOSTATO",
+    "hydrometer": "MEDIDOR_AGUA",
+    "lum_sensor": "DIMMER",
+    "energy_meter": "MEDIDOR_ENERGIA",
+}
+
+CAMPOS_INTRUSION_DETECTOR = {
+    "timeout_alarm": "int",
+    "passkey": "string",
+    "start_time": "string",
+    "end_time": "string",
+    "person_detected": "bool",
+}
+
 
 def validar_comparador(tipo_dispositivo, comparador):
     permitidos = COMPARADORES_POR_TIPO.get(tipo_dispositivo)
     if permitidos is None:
-        raise Exception(f"Tipo '{tipo_dispositivo}' não tem regras de comparação definidas.")
+        raise Exception(
+            f"Tipo '{tipo_dispositivo}' não tem regras de comparação definidas."
+        )
     if comparador not in permitidos:
         raise Exception(f"{tipo_dispositivo} não aceita comparador '{comparador}'.")
 
 
-def semantica_device(node, tipos_definidos):
-    nome_tipo = node["nome"]
+def semantica_device(node, declarados, tipos_definidos):
+    nome = node["nome"]
+    tipo_device = node["tipo_device"]
 
-    if nome_tipo in tipos_definidos:
-        raise Exception(f"Tipo de dispositivo '{nome_tipo}' já foi definido.")
+    if nome in declarados:
+        raise Exception(f"Dispositivo '{nome}' já foi declarado.")
+    if tipo_device not in TIPOS_DEVICE_INTERNOS:
+        raise Exception(f"Tipo de dispositivo desconhecido: '{tipo_device}'.")
 
-    nomes_campos = set()
+    campos_por_nome = {}
     for campo in node["campos"]:
-        if campo["tipo"] not in TIPOS_DE_CAMPO_VALIDOS:
-            raise Exception(f"Tipo de campo desconhecido: '{campo['tipo']}'.")
-        if campo["nome"] in nomes_campos:
-            raise Exception(
-                f"Campo '{campo['nome']}' duplicado no device '{nome_tipo}'."
-            )
-        nomes_campos.add(campo["nome"])
+        tipo_campo = campo["tipo"]
+        nome_campo = campo["nome"]
 
-    tipos_definidos[nome_tipo] = node["campos"]
+        if tipo_campo not in TIPOS_DE_CAMPO_VALIDOS:
+            raise Exception(f"Tipo de campo desconhecido: '{tipo_campo}'.")
+        if nome_campo in campos_por_nome:
+            raise Exception(f"Campo '{nome_campo}' duplicado no device '{nome}'.")
+        campos_por_nome[nome_campo] = tipo_campo
+
+    if tipo_device == "intrusion_detector":
+        ausentes = CAMPOS_INTRUSION_DETECTOR.keys() - campos_por_nome.keys()
+        extras = campos_por_nome.keys() - CAMPOS_INTRUSION_DETECTOR.keys()
+
+        if ausentes:
+            raise Exception(
+                "Campos obrigatórios ausentes no intrusion_detector "
+                f"'{nome}': {', '.join(sorted(ausentes))}."
+            )
+        if extras:
+            raise Exception(
+                f"Campos inválidos no intrusion_detector '{nome}': "
+                f"{', '.join(sorted(extras))}."
+            )
+
+        for nome_campo, tipo_esperado in CAMPOS_INTRUSION_DETECTOR.items():
+            tipo_recebido = campos_por_nome[nome_campo]
+            if tipo_recebido != tipo_esperado:
+                raise Exception(
+                    f"Campo '{nome_campo}' do intrusion_detector '{nome}' "
+                    f"deve ser '{tipo_esperado}', não '{tipo_recebido}'."
+                )
+
+    declarados[nome] = TIPOS_DEVICE_INTERNOS[tipo_device]
+    tipos_definidos[nome] = node["campos"]
+    node["tipo"] = "void"
 
 
 def semantica_base(node, declarados, tipos_definidos=None):
@@ -48,25 +96,26 @@ def semantica_base(node, declarados, tipos_definidos=None):
         tipos_definidos = {}
 
     match node["acao"]:
-        case "definir_tipo":
-            semantica_device(node, tipos_definidos)
-
-        case "dispositivo":
-            tipo = node["tipo"]
-            if tipo not in TIPOS_FIXOS_CONHECIDOS and tipo not in tipos_definidos:
-                raise Exception(
-                    f"Tipo de dispositivo '{tipo}' não foi declarado "
-                    f"(nem é um tipo fixo, nem foi definido com 'device {tipo} {{...}}')."
-                )
-            declarados[node["nome"]] = tipo
+        case "declarar_device":
+            semantica_device(node, declarados, tipos_definidos)
 
         case "trancar" | "destrancar" | "alerta":
             semantica_fechadura(node, declarados)
 
-        case "definir_temperatura" | "ler_temperatura" | "alerta_temperatura" | "condicional_temperatura":
+        case (
+            "definir_temperatura"
+            | "ler_temperatura"
+            | "alerta_temperatura"
+            | "condicional_temperatura"
+        ):
             semantica_temperatura(node, declarados)
 
-        case "definir_luminosidade" | "ler_luminosidade" | "alerta_luminosidade" | "condicional_luminosidade":
+        case (
+            "definir_luminosidade"
+            | "ler_luminosidade"
+            | "alerta_luminosidade"
+            | "condicional_luminosidade"
+        ):
             semantica_luminosidade(node, declarados)
 
         case (
@@ -80,6 +129,7 @@ def semantica_base(node, declarados, tipos_definidos=None):
             | "definir_hora_funcionamento"
         ):
             semantica_intdetector(node, declarados)
+
         case (
             "definir_limite_energia"
             | "registrar_consumo_energia"
@@ -99,6 +149,7 @@ def semantica_base(node, declarados, tipos_definidos=None):
             | "condicional_agua"
         ):
             semantica_agua(node, declarados)
+
         case "condicional":
             if node["alvo"] not in declarados:
                 raise Exception(f"{node['alvo']} não foi declarado.")
