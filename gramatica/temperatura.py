@@ -9,8 +9,7 @@ REGRAS_TEMPERATURA = r"""
     
     condicional_temperatura: "SE" IDENTIFICADOR COMPARADOR NUMERO "ENTAO" comando_temperatura "SENAO" comando_temperatura "FIM"
     
-    comando_temperatura: dispositivo_termostato
-                       | definir_temperatura
+    comando_temperatura: definir_temperatura
                        | ler_temperatura
                        | alerta_temperatura
                        | condicional_temperatura

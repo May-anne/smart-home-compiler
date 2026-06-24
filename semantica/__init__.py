@@ -2,19 +2,23 @@ from semantica.semantica_fechadura import semantica_fechadura
 from semantica.semantica_intdetector import semantica_intdetector
 from semantica.temperatura import semantica_temperatura
 from semantica.luminosidade import semantica_luminosidade
-from semantica.semantica_energia import semantica_energia
-from semantica.semantica_agua import semantica_agua
+from semantica.energia import semantica_energia
+from semantica.agua import semantica_agua
 
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
-    "TEMPERATURA": {">", "<", ">=", "<=", "=="},
-    "LUMINOSIDADE": {">", "<", ">=", "<=", "=="},
-    "INTRUSAO": {"=="},
+    "TERMOSTATO": {">", "<", ">=", "<=", "=="},
+    "DIMMER": {">", "<", ">=", "<=", "=="},
+    "INTDETECTOR": {"=="},
 }
 
-TIPOS_FIXOS_CONHECIDOS = {"FECHADURA", "TEMPERATURA", "LUMINOSIDADE", "INTRUSAO", "ENERGIA", "AGUA"}
+TIPOS_FIXOS_CONHECIDOS = {
+    "FECHADURA", "TERMOSTATO", "INTDETECTOR",
+    "MEDIDOR_AGUA", "DIMMER", "MEDIDOR_ENERGIA",
+}
 
 TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
+
 
 def validar_comparador(tipo_dispositivo, comparador):
     permitidos = COMPARADORES_POR_TIPO.get(tipo_dispositivo)
@@ -24,40 +28,28 @@ def validar_comparador(tipo_dispositivo, comparador):
         raise Exception(f"{tipo_dispositivo} não aceita comparador '{comparador}'.")
 
 
-def semantica_device(node, tipos_definidos):
-    nome_tipo = node["nome"]
-
-    if nome_tipo in tipos_definidos:
-        raise Exception(f"Tipo de dispositivo '{nome_tipo}' já foi definido.")
-
+def validar_campos_extra(node):
     nomes_campos = set()
     for campo in node["campos"]:
         if campo["tipo"] not in TIPOS_DE_CAMPO_VALIDOS:
             raise Exception(f"Tipo de campo desconhecido: '{campo['tipo']}'.")
         if campo["nome"] in nomes_campos:
             raise Exception(
-                f"Campo '{campo['nome']}' duplicado no device '{nome_tipo}'."
+                f"Campo '{campo['nome']}' duplicado no device '{node['nome']}'."
             )
         nomes_campos.add(campo["nome"])
 
-    tipos_definidos[nome_tipo] = node["campos"]
 
-
-def semantica_base(node, declarados, tipos_definidos=None):
-    if tipos_definidos is None:
-        tipos_definidos = {}
-
+def semantica_base(node, declarados):
     match node["acao"]:
-        case "definir_tipo":
-            semantica_device(node, tipos_definidos)
-
         case "dispositivo":
             tipo = node["tipo"]
-            if tipo not in TIPOS_FIXOS_CONHECIDOS and tipo not in tipos_definidos:
-                raise Exception(
-                    f"Tipo de dispositivo '{tipo}' não foi declarado "
-                    f"(nem é um tipo fixo, nem foi definido com 'device {tipo} {{...}}')."
-                )
+            if tipo not in TIPOS_FIXOS_CONHECIDOS:
+                raise Exception(f"Tipo de dispositivo '{tipo}' desconhecido.")
+            if node["nome"] in declarados:
+                raise Exception(f"Dispositivo '{node['nome']}' já foi declarado.")
+
+            validar_campos_extra(node)
             declarados[node["nome"]] = tipo
 
         case "trancar" | "destrancar" | "alerta":
@@ -80,6 +72,7 @@ def semantica_base(node, declarados, tipos_definidos=None):
             | "definir_hora_funcionamento"
         ):
             semantica_intdetector(node, declarados)
+
         case (
             "definir_limite_energia"
             | "registrar_consumo_energia"
@@ -99,6 +92,7 @@ def semantica_base(node, declarados, tipos_definidos=None):
             | "condicional_agua"
         ):
             semantica_agua(node, declarados)
+
         case "condicional":
             if node["alvo"] not in declarados:
                 raise Exception(f"{node['alvo']} não foi declarado.")
@@ -110,9 +104,9 @@ def semantica_base(node, declarados, tipos_definidos=None):
                 raise Exception("String só aceita '=='.")
 
             for item in node["se"]:
-                semantica_base(item, declarados, tipos_definidos)
+                semantica_base(item, declarados)
             for item in node["senao"]:
-                semantica_base(item, declarados, tipos_definidos)
+                semantica_base(item, declarados)
 
             node["tipo"] = "bool"
 

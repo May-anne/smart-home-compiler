@@ -9,8 +9,7 @@ REGRAS_LUMINOSIDADE = r"""
 
     condicional_luminosidade: "SE" IDENTIFICADOR COMPARADOR NUMERO "ENTAO" comando_luminosidade "SENAO" comando_luminosidade "FIM"
     
-    comando_luminosidade: dispositivo_dimmer
-                        | definir_luminosidade
+    comando_luminosidade: definir_luminosidade
                         | ler_luminosidade
                         | alerta_luminosidade
                         | condicional_luminosidade

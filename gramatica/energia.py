@@ -13,8 +13,7 @@ REGRAS_ENERGIA = r"""
 
     condicional_energia: "SE" IDENTIFICADOR COMPARADOR NUMERO "ENTAO" comando_energia "SENAO" comando_energia "FIM"
 
-    comando_energia: dispositivo_medidor_energia
-                   | definir_limite_energia
+    comando_energia: definir_limite_energia
                    | registrar_consumo_energia
                    | ler_consumo_energia
                    | resetar_consumo_energia

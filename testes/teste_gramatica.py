@@ -1,12 +1,7 @@
 import pytest
 from lark import Lark
-from gramatica.base import GRAMATICA_COMPLETA
+from gramatica import GRAMATICA_COMPLETA
 
-
-linhas = GRAMATICA_COMPLETA.split("\n")
-for i, linha in enumerate(linhas, start=1):
-    if 58 <= i <= 68:
-        print(f"{i}: {linha}")
 
 @pytest.fixture
 def parser():
@@ -15,7 +10,18 @@ def parser():
 
 def test_device_simples_parseia(parser):
     codigo = """
-    device Fechadura {
+    device porta_frente {
+        type FECHADURA;
+    }
+    """
+    tree = parser.parse(codigo)
+    assert tree.data == "start"
+
+
+def test_device_com_campos_extra_parseia(parser):
+    codigo = """
+    device frigobar {
+        type TERMOSTATO;
         bool ligada;
         int temperatura;
     }
@@ -24,15 +30,36 @@ def test_device_simples_parseia(parser):
     assert tree.data == "start"
 
 
-def test_device_sem_campos_parseia(parser):
-    codigo = "device Vazio { }"
+def test_device_sem_campos_extra_parseia(parser):
+    # "type" é obrigatório, mas campos extras (bool/int/...) são opcionais
+    codigo = "device sensor1 { type INTDETECTOR; }"
     tree = parser.parse(codigo)
     assert tree.data == "start"
 
 
-def test_device_com_tipo_invalido_falha(parser):
+def test_device_sem_type_falha(parser):
+    # "type" é obrigatório — sem ele, o parser deve rejeitar
+    codigo = "device quebrado { bool ligada; }"
+    with pytest.raises(Exception):
+        parser.parse(codigo)
+
+
+def test_device_com_tipo_de_dispositivo_invalido_falha(parser):
+    # FORNO não está em TIPO_DEVICE
     codigo = """
-    device Quebrado {
+    device quebrado {
+        type FORNO;
+    }
+    """
+    with pytest.raises(Exception):
+        parser.parse(codigo)
+
+
+def test_device_com_tipo_de_campo_invalido_falha(parser):
+    # "cor" não está em TIPO_CAMPO (bool/int/string/float)
+    codigo = """
+    device quebrado {
+        type FECHADURA;
         cor algumacoisa;
     }
     """

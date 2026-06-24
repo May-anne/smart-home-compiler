@@ -13,8 +13,7 @@ REGRAS_AGUA = r"""
 
     condicional_agua: "SE" IDENTIFICADOR COMPARADOR NUMERO "ENTAO" comando_agua "SENAO" comando_agua "FIM"
 
-    comando_agua: dispositivo_medidor_agua
-                | definir_limite_agua
+    comando_agua: definir_limite_agua
                 | registrar_consumo_agua
                 | ler_consumo_agua
                 | resetar_consumo_agua

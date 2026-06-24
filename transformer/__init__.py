@@ -1,7 +1,7 @@
 from transformer.transformer_fechadura import transformer_fechadura
 from transformer.transformer_intdetector import transformer_intdetector
-from transformer.transformer_energia import transformer_energia
-from transformer.transformer_agua import transformer_agua
+from transformer.agua import transformer_agua
+from transformer.energia import transformer_energia
 
 def transformer(tree):
     match tree.data:
@@ -22,15 +22,42 @@ def transformer(tree):
             | "definir_hora_funcionamento"
         ):
             return transformer_intdetector(tree)
-        # outros casos...
+        case (
+            "comando_agua"
+            | "dispositivo_medidor_agua"
+            | "definir_limite_agua"
+            | "registrar_consumo_agua"
+            | "ler_consumo_agua"
+            | "resetar_consumo_agua"
+            | "alerta_agua"
+            | "condicional_agua"
+        ):
+            return transformer_agua(tree)
+        case (
+             "comando_energia"
+             | "dispositivo_medidor_energia"
+             | "definir_limite_energia"
+             | "registrar_consumo_energia"
+             | "ler_consumo_energia"
+             | "resetar_consumo_energia"
+             | "alerta_energia"
+             | "condicional_energia"
+        ):
+            return transformer_energia(tree)
+        
         case "device":
-            nome_tipo = str(tree.children[0])
-            campos = [transformer(c) for c in tree.children[1:]]
+            nome_instancia = str(tree.children[0])
+            tipo_dispositivo = transformer(tree.children[1])  
+            campos = [transformer(c) for c in tree.children[2:]] 
             return {
-                "acao": "definir_tipo",
-                "nome": nome_tipo,
+                "acao": "dispositivo",
+                "nome": nome_instancia,
+                "tipo": tipo_dispositivo,
                 "campos": campos,
             }
+
+        case "tipo":
+            return str(tree.children[0])
         case "campo":
             tipo_campo = str(tree.children[0])
             nome_campo = str(tree.children[1])

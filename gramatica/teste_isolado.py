@@ -1,4 +1,4 @@
-from gramatica.base import GRAMATICA_COMPLETA
+from gramatica import GRAMATICA_COMPLETA
 
 linhas = GRAMATICA_COMPLETA.split("\n")
 for i, linha in enumerate(linhas, start=1):
