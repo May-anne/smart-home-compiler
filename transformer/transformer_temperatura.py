@@ -8,10 +8,6 @@ def transformer_temperatura(tree: Tree) -> dict:
         case "comando_temperatura":
             return transformer_temperatura(tree.children[0])
 
-        case "dispositivo_termostato":
-            nome = str(tree.children[0])
-            return {"acao": "dispositivo_termostato", "nome": nome}
-
         case "definir_temperatura":
             alvo = str(tree.children[0])
             valor = float(str(tree.children[1]))

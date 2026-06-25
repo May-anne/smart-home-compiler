@@ -8,10 +8,6 @@ def transformer_luminosidade(tree: Tree) -> dict:
         case "comando_luminosidade":
             return transformer_luminosidade(tree.children[0])
 
-        case "dispositivo_dimmer":
-            nome = str(tree.children[0])
-            return {"acao": "dispositivo_dimmer", "nome": nome}
-
         case "definir_luminosidade":
             alvo = str(tree.children[0])
             valor = float(str(tree.children[1]))

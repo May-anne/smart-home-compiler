@@ -9,10 +9,6 @@ def transformer_energia(tree: Tree) -> dict:
         case "comando_energia":
             return transformer_energia(tree.children[0])
 
-        case "dispositivo_medidor_energia":
-            nome = str(tree.children[0])
-            return {"acao": "dispositivo_medidor_energia", "nome": nome, "tipo": "MEDIDOR_ENERGIA"}
-
         case "definir_limite_energia":
             alvo = str(tree.children[0])
             valor = float(str(tree.children[1]))

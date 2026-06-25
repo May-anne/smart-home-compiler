@@ -9,10 +9,6 @@ def transformer_agua(tree: Tree) -> dict:
         case "comando_agua":
             return transformer_agua(tree.children[0])
 
-        case "dispositivo_medidor_agua":
-            nome = str(tree.children[0])
-            return {"acao": "dispositivo_medidor_agua", "nome": nome, "tipo": "MEDIDOR_AGUA"}
-
         case "definir_limite_agua":
             alvo = str(tree.children[0])
             valor = float(str(tree.children[1]))
