@@ -1,0 +1,4 @@
+device termostato1 { type TERMOSTATO; }
+
+// Erro sintático: falta a palavra PARA antes do valor.
+DEFINIR_TEMPERATURA termostato1 22

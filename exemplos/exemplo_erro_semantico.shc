@@ -1,0 +1,4 @@
+device dimmer1 { type DIMMER; }
+
+// A sintaxe é válida, mas um DIMMER não pode receber um comando de temperatura.
+DEFINIR_TEMPERATURA dimmer1 PARA 22

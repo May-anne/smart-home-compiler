@@ -1,61 +1,34 @@
-import sys
 import json
+import sys
+from pathlib import Path
+
 from lark import Lark
 
-from gramatica import GRAMATICA_COMPLETA
-from transformer import transformer
-from semantica import semantica_base
 from gerador.gerador import gerar_programa
+from gramatica import GRAMATICA_COMPLETA
+from semantica import semantica_base
+from transformer import transformer
 
 
-CODIGO_FONTE = """\
-device fechadura1  { type FECHADURA; }
-device termostato1 { type TERMOSTATO; }
-device dimmer1     { type DIMMER; }
-device detector1   { type INTDETECTOR; int timeout_alerta; string start_time; string end_time; bool person_detected;}
-device agua1       { type MEDIDOR_AGUA; }
-device energia1    { type MEDIDOR_ENERGIA; }
+# Altere este valor para: "valido", "erro_sintatico" ou "erro_semantico".
+EXEMPLO_ATIVO = "valido"
 
-INFORMAR_SENHA_FECHADURA fechadura1 COM SENHA "1234"
-DESTRANCAR fechadura1
-ALERTA
+ARQUIVOS_EXEMPLO = {
+    "valido": "exemplo_valido.shc",
+    "erro_sintatico": "exemplo_erro_sintatico.shc",
+    "erro_semantico": "exemplo_erro_semantico.shc",
+}
 
-DEFINIR_TEMPERATURA termostato1 PARA 22
-LER_TEMPERATURA termostato1
-ALERTA_TEMP "Temperatura muito alta"
 
-DEFINIR_LUMINOSIDADE dimmer1 PARA 75
-LER_LUMINOSIDADE dimmer1
-ALERTA_LUZ "Luz baixa"
+def carregar_codigo_fonte():
+    if EXEMPLO_ATIVO not in ARQUIVOS_EXEMPLO:
+        opcoes = ", ".join(ARQUIVOS_EXEMPLO)
+        raise ValueError(
+            f"Exemplo '{EXEMPLO_ATIVO}' desconhecido. Opções: {opcoes}."
+        )
 
-CONFIGURAR detector1 COM TIMEOUT 30 SEGUNDOS E CODIGO "ABC123"
-ARMAR detector1
-DESARMAR detector1
-detector1 DETECTOU PRESENCA
-INFORMAR_SENHA detector1 COM "9999"
-TIMEOUT detector1 EXPIRADO
-DISPARAR_ALARME detector1
-DEFINIR_HORA_FUNCIONAMENTO detector1 DAS 08:00 AS 18:00
-
-DEFINIR_LIMITE_ENERGIA energia1 PARA 500 KWH
-REGISTRAR_CONSUMO_ENERGIA energia1 PARA 120 KWH
-LER_CONSUMO_ENERGIA energia1
-RESETAR_CONSUMO_ENERGIA energia1
-ALERTA_ENERGIA "Limite proximo"
-
-DEFINIR_LIMITE_AGUA agua1 PARA 300 LITROS
-REGISTRAR_CONSUMO_AGUA agua1 PARA 80 LITROS
-LER_CONSUMO_AGUA agua1
-RESETAR_CONSUMO_AGUA agua1
-ALERTA_AGUA "Consumo alto"
-
-SE termostato1 > 30 ENTAO
-    ALERTA_TEMP "Muito quente"
-    DEFINIR_TEMPERATURA termostato1 PARA 20
-SENAO
-    DEFINIR_TEMPERATURA termostato1 PARA 25
-FIM
-"""
+    caminho = Path(__file__).parent / "exemplos" / ARQUIVOS_EXEMPLO[EXEMPLO_ATIVO]
+    return caminho, caminho.read_text(encoding="utf-8")
 
 
 def sep(titulo):
@@ -63,10 +36,19 @@ def sep(titulo):
 
 
 def main():
+    try:
+        caminho_fonte, codigo_fonte = carregar_codigo_fonte()
+    except (OSError, ValueError) as e:
+        print(f"[ERRO - Código fonte] {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Exemplo selecionado: {EXEMPLO_ATIVO}")
+    print(f"Arquivo: {caminho_fonte}")
+
     sep("1. PARSE")
     parser = Lark(GRAMATICA_COMPLETA, parser="lalr", start="start")
     try:
-        tree = parser.parse(CODIGO_FONTE)
+        tree = parser.parse(codigo_fonte)
     except Exception as e:
         print(f"[ERRO - Parse] {e}", file=sys.stderr)
         sys.exit(1)
@@ -81,7 +63,7 @@ def main():
     print(json.dumps(nos, indent=2, ensure_ascii=False))
 
     sep("3. ANÁLISE SEMÂNTICA")
-    declarados     = {}
+    declarados = {}
     senha_validada = {}
     try:
         for no in nos:
