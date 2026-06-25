@@ -4,6 +4,7 @@ from semantica.semantica_temperatura import semantica_temperatura
 from semantica.semantica_luminosidade import semantica_luminosidade
 from semantica.semantica_energia import semantica_energia
 from semantica.semantica_agua import semantica_agua
+from copy import copy
 
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
@@ -152,9 +153,9 @@ def semantica_base(node, declarados, senha_validada=None):
                 _validar_valor_condicional(tipo_alvo, node["valor"]["valor"])
 
             for item in node["se"]:
-                semantica_base(item, declarados, senha_validada)
+                semantica_base(item, declarados, copy(senha_validada))
             for item in node["senao"]:
-                semantica_base(item, declarados, senha_validada)
+                semantica_base(item, declarados, copy(senha_validada))
 
             node["tipo"] = "bool"
 

@@ -92,27 +92,6 @@ def test_pipeline_intdetector_comandos_basicos():
     assert declarados["alarme"] == "INTDETECTOR"
     assert all(n["tipo"] == "void" for n in nodes)
 
-
-def test_pipeline_intdetector_horario_diurno():
-    nodes, _, _ = pipeline("""
-    device alarme { type INTDETECTOR; }
-    DEFINIR_HORA_FUNCIONAMENTO alarme DAS 08:00 AS 18:00
-    """)
-    h = nodes[-1]
-    assert h["hora_inicio"] == "08:00"
-    assert h["hora_fim"] == "18:00"
-    assert h["overnight"] is False
-
-
-def test_pipeline_intdetector_horario_overnight():
-    nodes, _, _ = pipeline("""
-    device alarme { type INTDETECTOR; }
-    DEFINIR_HORA_FUNCIONAMENTO alarme DAS 22:00 AS 06:00
-    """)
-    h = nodes[-1]
-    assert h["overnight"] is True
-
-
 def test_pipeline_intdetector_falha_horario_igual():
     with pytest.raises(Exception, match="devem ser diferentes"):
         pipeline("""

@@ -40,7 +40,6 @@ def semantica_intdetector(node, declarados):
                     "O início e o fim do horário de funcionamento devem ser diferentes."
                 )
             
-            node["overnight"] = node["hora_fim"] < node["hora_inicio"]
             node["tipo"] = "void"
 
         case _:
