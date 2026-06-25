@@ -12,7 +12,7 @@ CODIGO_FONTE = """\
 device fechadura1  { type FECHADURA; }
 device termostato1 { type TERMOSTATO; }
 device dimmer1     { type DIMMER; }
-device detector1   { type INTDETECTOR; }
+device detector1   { type INTDETECTOR; int timeout_alerta; string start_time; string end_time; bool person_detected;}
 device agua1       { type MEDIDOR_AGUA; }
 device energia1    { type MEDIDOR_ENERGIA; }
 
