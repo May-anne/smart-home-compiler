@@ -32,16 +32,18 @@ def test_dispositivo_de_tipo_nao_conhecido_falha():
     node = {"acao": "dispositivo", "nome": "frigobar", "tipo": "GELADEIRA", "campos": []}
 
     with pytest.raises(Exception, match="desconhecido"):
-        semantica_base(node, declarados)
+        semantica_base(node, declarados, {})
 
 
 def test_dispositivo_de_tipo_fixo_funciona():
     declarados = {}
     node = {"acao": "dispositivo", "nome": "porta1", "tipo": "FECHADURA", "campos": []}
 
-    semantica_base(node, declarados)
+    semantica_base(node, declarados, {})
 
     assert declarados["porta1"] == "FECHADURA"
+    # A semântica sobrescreve node["tipo"] para "void" após validar
+    assert node["tipo"] == "void"
 
 
 def test_dispositivo_com_campos_extra_funciona():
@@ -56,7 +58,7 @@ def test_dispositivo_com_campos_extra_funciona():
         ],
     }
 
-    semantica_base(node, declarados)
+    semantica_base(node, declarados, {})
 
     assert declarados["frigobar"] == "TERMOSTATO"
 
@@ -66,4 +68,4 @@ def test_dispositivo_duplicado_falha():
     node = {"acao": "dispositivo", "nome": "porta1", "tipo": "FECHADURA", "campos": []}
 
     with pytest.raises(Exception, match="já foi declarado"):
-        semantica_base(node, declarados)
+        semantica_base(node, declarados, {})

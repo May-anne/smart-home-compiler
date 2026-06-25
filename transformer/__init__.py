@@ -31,7 +31,6 @@ def transformer(tree):
             return transformer_intdetector(tree)
         case (
             "comando_agua"
-            | "dispositivo_medidor_agua"
             | "definir_limite_agua"
             | "registrar_consumo_agua"
             | "ler_consumo_agua"
@@ -41,7 +40,6 @@ def transformer(tree):
             return transformer_agua(tree)
         case (
              "comando_energia"
-             | "dispositivo_medidor_energia"
              | "definir_limite_energia"
              | "registrar_consumo_energia"
              | "ler_consumo_energia"
@@ -74,6 +72,7 @@ def transformer(tree):
                 "acao": "dispositivo",
                 "nome": nome_instancia,
                 "tipo": tipo_dispositivo,
+                "tipo_original": tipo_dispositivo,
                 "campos": campos,
             }
 
