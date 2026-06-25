@@ -22,14 +22,24 @@ MAPA_METODOS = {
 
 
 def gerar_cpp(node, nivel=0, declarados=None):
-    ind  = "    " * nivel
-    ind1 = "    " * (nivel + 1)
+    ind = "    " * nivel
 
     match node["acao"]:
 
         case "dispositivo":
-            tipo_orig = (declarados or {}).get(node["nome"], node["tipo"])
-            tipo_cpp  = MAPA_TIPOS.get(tipo_orig, tipo_orig)
+            # A semântica sobrescreve node["tipo"] com "void"; o tipo original
+            # deve ser lido de node["tipo_original"], que o transformer preserva.
+            tipo_orig = node.get("tipo_original")
+            if tipo_orig is None:
+                raise ValueError(
+                    f"Dispositivo '{node['nome']}' não possui 'tipo_original'. "
+                    "Verifique se o transformer está preenchendo esse campo."
+                )
+            tipo_cpp = MAPA_TIPOS.get(tipo_orig)
+            if tipo_cpp is None:
+                raise ValueError(
+                    f"Tipo de dispositivo desconhecido no gerador: '{tipo_orig}'."
+                )
             return f"{ind}{tipo_cpp} {node['nome']};"
 
         case "definir_temperatura":
@@ -41,15 +51,6 @@ def gerar_cpp(node, nivel=0, declarados=None):
         case "alerta_temperatura":
             return f'{ind}std::cout << "[TEMP] {node["mensagem"]}" << std::endl;'
 
-        case "condicional_temperatura":
-            op    = MAPA_COMPARADORES[node["operador"]]
-            se    = gerar_cpp(node["se_verdadeiro"], nivel + 1, declarados)
-            senao = gerar_cpp(node["se_falso"],      nivel + 1, declarados)
-            return (
-                f"{ind}if ({node['alvo']}.getTemperatura() {op} {node['valor']}) {{\n"
-                f"{se}\n{ind}}} else {{\n{senao}\n{ind}}}"
-            )
-
         case "definir_luminosidade":
             return f"{ind}{node['alvo']}.setLuminosidade({node['valor']});"
 
@@ -59,26 +60,17 @@ def gerar_cpp(node, nivel=0, declarados=None):
         case "alerta_luminosidade":
             return f'{ind}std::cout << "[LUZ] {node["mensagem"]}" << std::endl;'
 
-        case "condicional_luminosidade":
-            op    = MAPA_COMPARADORES[node["operador"]]
-            se    = gerar_cpp(node["se_verdadeiro"], nivel + 1, declarados)
-            senao = gerar_cpp(node["se_falso"],      nivel + 1, declarados)
-            return (
-                f"{ind}if ({node['alvo']}.getLuminosidade() {op} {node['valor']}) {{\n"
-                f"{se}\n{ind}}} else {{\n{senao}\n{ind}}}"
-            )
+        case "informar_senha_fechadura":
+            return f"{ind}{node['nome']}.informarSenha(\"{node['senha']}\");"
 
         case "trancar":
             return f"{ind}{node['nome']}.trancar();"
 
         case "destrancar":
-            return (
-                f"{ind}{node['nome']}.destrancar();\n"
-                f"{ind1}// LED: {node['led']}"
-            )
+            return f"{ind}{node['nome']}.destrancar();"
 
         case "alerta":
-            return f"{ind}// LED: {node['led']}"
+            return f'{ind}std::cout << "[FECHADURA] Alerta de segurança." << std::endl;'
         case "configurar_detector":
             return f"{ind}{node['alvo']}.configurar({node['timeout']}, \"{node['codigo']}\");"
 
@@ -121,15 +113,6 @@ def gerar_cpp(node, nivel=0, declarados=None):
         case "alerta_energia":
             return f'{ind}std::cout << "[ENERGIA] {node["mensagem"]}" << std::endl;'
 
-        case "condicional_energia":
-            op    = MAPA_COMPARADORES[node["operador"]]
-            se    = gerar_cpp(node["se_verdadeiro"], nivel + 1, declarados)
-            senao = gerar_cpp(node["se_falso"],      nivel + 1, declarados)
-            return (
-                f"{ind}if ({node['alvo']}.getConsumo() {op} {node['valor']}) {{\n"
-                f"{se}\n{ind}}} else {{\n{senao}\n{ind}}}"
-            )
-
         case "definir_limite_agua":
             return f"{ind}{node['alvo']}.setLimite({node['valor']});"
 
@@ -145,25 +128,23 @@ def gerar_cpp(node, nivel=0, declarados=None):
         case "alerta_agua":
             return f'{ind}std::cout << "[AGUA] {node["mensagem"]}" << std::endl;'
         
-        case "informar_senha_fechadura":
-            return f"{ind}{node['nome']}.informarSenha(\"{node['senha']}\");"
-
-        case "condicional_agua":
-            op    = MAPA_COMPARADORES[node["operador"]]
-            se    = gerar_cpp(node["se_verdadeiro"], nivel + 1, declarados)
-            senao = gerar_cpp(node["se_falso"],      nivel + 1, declarados)
-            return (
-                f"{ind}if ({node['alvo']}.getConsumo() {op} {node['valor']}) {{\n"
-                f"{se}\n{ind}}} else {{\n{senao}\n{ind}}}"
-            )
-
         case "condicional":
-            op     = MAPA_COMPARADORES[node["comparador"]]
-            valor  = node["valor"]["valor"]
+            op    = MAPA_COMPARADORES[node["comparador"]]
+            valor = node["valor"]["valor"]
             if node["valor"]["tipo"] == "string":
                 valor = f'"{valor}"'
-            tipo   = (declarados or {}).get(node["alvo"], "")
-            metodo = MAPA_METODOS.get(tipo, "getValor()")
+            tipo = (declarados or {}).get(node["alvo"])
+            if tipo is None:
+                raise ValueError(
+                    f"Alvo '{node['alvo']}' não encontrado em declarados. "
+                    "Certifique-se de passar declarados para gerar_cpp."
+                )
+            metodo = MAPA_METODOS.get(tipo)
+            if metodo is None:
+                raise ValueError(
+                    f"Tipo '{tipo}' do alvo '{node['alvo']}' não possui método "
+                    "de acesso mapeado em MAPA_METODOS."
+                )
             linhas_se    = "\n".join(gerar_cpp(i, nivel + 1, declarados) for i in node["se"])
             linhas_senao = "\n".join(gerar_cpp(i, nivel + 1, declarados) for i in node["senao"])
             return (
@@ -176,6 +157,8 @@ def gerar_cpp(node, nivel=0, declarados=None):
 
 
 def gerar_programa(nos, declarados=None):
+    # declarados: dict nome -> tipo, necessário para gerar condicionais corretamente.
+    # Para dispositivos, o tipo é lido de node["tipo_original"] (preenchido pelo transformer).
     linhas = [
         '#include "SmartHome.h"',
         "#include <iostream>\n",

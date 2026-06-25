@@ -20,6 +20,7 @@ def test_transformer_device_gera_dict_correto():
             "acao": "dispositivo",
             "nome": "frigobar",
             "tipo": "TERMOSTATO",
+            "tipo_original": "TERMOSTATO",
             "campos": [
                 {"tipo": "bool", "nome": "ligada"},
                 {"tipo": "int", "nome": "temperatura"},
@@ -40,6 +41,7 @@ def test_transformer_device_sem_campos_extra():
             "acao": "dispositivo",
             "nome": "porta_frente",
             "tipo": "FECHADURA",
+            "tipo_original": "FECHADURA",
             "campos": [],
         }
     ]
