@@ -158,7 +158,7 @@ def test_pipeline_temperatura_ler():
 
 def test_pipeline_temperatura_alerta():
     nodes, _, _ = pipeline("""
-    ALERTA_TEMP "temperatura critica"
+    ALERTA_TEMPERATURA "temperatura critica"
     """)
     assert nodes[-1]["mensagem"] == "temperatura critica"
 
@@ -344,7 +344,7 @@ def test_pipeline_condicional_temperatura():
     nodes, _, _ = pipeline("""
     device frig { type TERMOSTATO; }
     SE frig > 30 ENTAO
-        ALERTA_TEMP "quente demais"
+        ALERTA_TEMPERATURA "quente demais"
     SENAO
         DEFINIR_TEMPERATURA frig PARA 20
     FIM
@@ -372,9 +372,9 @@ def test_pipeline_condicional_falha_valor_fora_intervalo():
         pipeline("""
         device frig { type TERMOSTATO; }
         SE frig > 200 ENTAO
-            ALERTA_TEMP "erro"
+            ALERTA_TEMPERATURA "erro"
         SENAO
-            ALERTA_TEMP "ok"
+            ALERTA_TEMPERATURA "ok"
         FIM
         """)
 
@@ -383,9 +383,9 @@ def test_pipeline_condicional_falha_dispositivo_nao_declarado():
     with pytest.raises(Exception, match="não foi declarado"):
         pipeline("""
         SE fantasma > 10 ENTAO
-            ALERTA_TEMP "ops"
+            ALERTA_TEMPERATURA "ops"
         SENAO
-            ALERTA_TEMP "ok"
+            ALERTA_TEMPERATURA "ok"
         FIM
         """)
 
