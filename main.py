@@ -66,7 +66,7 @@ def sep(titulo):
 
 def main():
     sep("1. PARSE")
-    parser = Lark(GRAMATICA_COMPLETA, parser="earley", start="start")
+    parser = Lark(GRAMATICA_COMPLETA, parser="lalr", start="start")
     try:
         tree = parser.parse(CODIGO_FONTE)
     except Exception as e:
