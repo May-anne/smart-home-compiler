@@ -20,6 +20,15 @@ TIPOS_FIXOS_CONHECIDOS = {
     "MEDIDOR_AGUA", "DIMMER", "MEDIDOR_ENERGIA",
 }
 
+TIPOS_VALOR_POR_DISPOSITIVO = {
+    "TERMOSTATO":      {"numero"},
+    "DIMMER":          {"numero"},
+    "MEDIDOR_AGUA":    {"numero"},
+    "MEDIDOR_ENERGIA": {"numero"},
+    "FECHADURA":       {"string"},  
+    "INTDETECTOR":     {"string"},   
+}
+
 TIPOS_DE_CAMPO_VALIDOS = {"bool", "int", "string", "float"}
 
 
@@ -143,8 +152,16 @@ def semantica_base(node, declarados, senha_validada=None):
             if node["alvo"] not in declarados:
                 raise Exception(f"'{node['alvo']}' não foi declarado.")
 
-            tipo_alvo = declarados[node["alvo"]]
+            tipo_alvo  = declarados[node["alvo"]]
+            tipo_valor = node["valor"]["tipo"]
+
             validar_comparador(tipo_alvo, node["comparador"])
+
+            tipos_aceitos = TIPOS_VALOR_POR_DISPOSITIVO.get(tipo_alvo, set())
+            if tipos_aceitos and tipo_valor not in tipos_aceitos:
+                raise Exception(
+                    f"'{node['alvo']}' ({tipo_alvo}) não aceita valor do tipo '{tipo_valor}' na condicional."
+                )
 
             if node["valor"]["tipo"] == "string" and node["comparador"] != "==":
                 raise Exception("Comparação com string só aceita '=='.")
@@ -153,11 +170,8 @@ def semantica_base(node, declarados, senha_validada=None):
                 _validar_valor_condicional(tipo_alvo, node["valor"]["valor"])
 
             for item in node["se"]:
-                semantica_base(item, declarados, copy(senha_validada))
+                semantica_base(item, declarados, senha_validada)
             for item in node["senao"]:
-                semantica_base(item, declarados, copy(senha_validada))
+                semantica_base(item, declarados, senha_validada)
 
             node["tipo"] = "bool"
-
-        case _:
-            raise Exception(f"Nó desconhecido: '{node['acao']}'")

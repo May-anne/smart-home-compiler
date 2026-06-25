@@ -17,8 +17,6 @@ device agua1       { type MEDIDOR_AGUA; }
 device energia1    { type MEDIDOR_ENERGIA; }
 
 INFORMAR_SENHA_FECHADURA fechadura1 COM SENHA "1234"
-TRANCAR fechadura1
-INFORMAR_SENHA_FECHADURA fechadura1 COM SENHA "1234"
 DESTRANCAR fechadura1
 ALERTA
 
