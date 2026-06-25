@@ -8,7 +8,7 @@ def semantica_intdetector(node, declarados):
             timeout = node["timeout"]
             if timeout <= 0:
                 raise Exception("O timeout do detector deve ser maior que zero.")
-            if not timeout.is_integer():
+            if not float(timeout).is_integer():
                 raise Exception("O timeout do detector deve ser um número inteiro.")
             node["timeout"] = int(timeout)
 
@@ -39,6 +39,8 @@ def semantica_intdetector(node, declarados):
                 raise Exception(
                     "O início e o fim do horário de funcionamento devem ser diferentes."
                 )
+            
+            node["overnight"] = node["hora_fim"] < node["hora_inicio"]
             node["tipo"] = "void"
 
         case _:
