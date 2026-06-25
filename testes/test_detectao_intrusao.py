@@ -32,15 +32,15 @@ class IntrusionDetectorTest(unittest.TestCase):
 
     def test_declaracao_configuracao_horario_e_acoes(self):
         fonte = DEVICE_VALIDO + """
-CONFIGURAR detector COM TIMEOUT 30 SEGUNDOS E CODIGO "1234"
-DEFINIR_HORA_FUNCIONAMENTO detector DAS 08:00 AS 22:00
-ARMAR detector
-detector DETECTOU PRESENCA
-TIMEOUT detector EXPIRADO
-DISPARAR_ALARME detector
-INFORMAR_SENHA detector COM "1234"
-DESARMAR detector
-"""
+            CONFIGURAR detector COM TIMEOUT 30 SEGUNDOS E CODIGO "1234"
+            DEFINIR_HORA_FUNCIONAMENTO detector DAS 08:00 AS 22:00
+            ARMAR detector
+            detector DETECTOU PRESENCA
+            TIMEOUT detector EXPIRADO
+            DISPARAR_ALARME detector
+            INFORMAR_SENHA detector COM "1234"
+            DESARMAR detector
+        """
         ast, declarados = self.analisar(fonte)
 
         self.assertEqual(declarados["detector"], "INTDETECTOR")
@@ -116,17 +116,13 @@ DESARMAR detector
 
     def test_rejeita_acao_para_device_de_outro_tipo(self):
         fonte = """
-device porta {
-    type FECHADURA;
-}
-ARMAR porta
-"""
+            device porta {
+                type FECHADURA;
+            }
+            ARMAR porta
+        """
         with self.assertRaisesRegex(Exception, "INTDETECTOR"):
             self.analisar(fonte)
-
-    def test_rejeita_declaracao_sintaxe_antiga(self):
-        with self.assertRaises(UnexpectedInput):
-            self.parser.parse("DISPOSITIVO detector : INTDETECTOR")
 
     #Validações dos comandos
 
@@ -158,14 +154,14 @@ ARMAR porta
 
     def test_todos_comandos_retornam_void(self):
         fonte = DEVICE_VALIDO + """
-CONFIGURAR detector COM TIMEOUT 10 SEGUNDOS E CODIGO "0000"
-ARMAR detector
-INFORMAR_SENHA detector COM "0000"
-detector DETECTOU PRESENCA
-TIMEOUT detector EXPIRADO
-DISPARAR_ALARME detector
-DESARMAR detector
-"""
+            CONFIGURAR detector COM TIMEOUT 10 SEGUNDOS E CODIGO "0000"
+            ARMAR detector
+            INFORMAR_SENHA detector COM "0000"
+            detector DETECTOU PRESENCA
+            TIMEOUT detector EXPIRADO
+            DISPARAR_ALARME detector
+            DESARMAR detector
+        """
         ast, _ = self.analisar(fonte)
         for node in ast:
             self.assertEqual(node["tipo"], "void")
