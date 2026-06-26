@@ -1,0 +1,35 @@
+device termostato1 { type TERMOSTATO; }
+device dimmer1     { type DIMMER; }
+device detector1   { type INTDETECTOR; int timeout_alerta; bool person_detected; }
+device agua1       { type MEDIDOR_AGUA; }
+
+// Loop: verifica temperatura 3 vezes seguidas
+REPETIR 3 VEZES
+    LER_TEMPERATURA termostato1
+    LER_LUMINOSIDADE dimmer1
+FIM
+
+// Cena agrupando comandos para o modo noturno
+CENA "Modo Noite" {
+    DEFINIR_TEMPERATURA termostato1 PARA 18
+    DEFINIR_LUMINOSIDADE dimmer1 PARA 10
+    ARMAR detector1
+}
+
+// Cena para a manhã com condicional interna
+CENA "Bom Dia" {
+    DEFINIR_LUMINOSIDADE dimmer1 PARA 80
+    SE termostato1 < 20 ENTAO
+        DEFINIR_TEMPERATURA termostato1 PARA 22
+    SENAO
+        DEFINIR_TEMPERATURA termostato1 PARA 20
+    FIM
+}
+
+// Agendamento: activa o modo noturno às 22:00
+AGENDAR DEFINIR_TEMPERATURA termostato1 PARA 18 AS 22:00
+
+// Loop com agendamento interno
+REPETIR 5 VEZES
+    REGISTRAR_CONSUMO_AGUA agua1 PARA 10 LITROS
+FIM
