@@ -10,13 +10,14 @@ from semantica import semantica_base
 from transformer import transformer
 
 
-# Altere este valor para: "valido", "erro_sintatico" ou "erro_semantico".
-EXEMPLO_ATIVO = "valido"
+# Altere este valor para: "valido", "estruturas", "erro_sintatico" ou "erro_semantico".
+EXEMPLO_ATIVO = "estruturas"
 
 ARQUIVOS_EXEMPLO = {
     "valido": "exemplo_valido.shc",
     "erro_sintatico": "exemplo_erro_sintatico.shc",
     "erro_semantico": "exemplo_erro_semantico.shc",
+    "estruturas": "exemplo_estruturas.shc",
 }
 
 

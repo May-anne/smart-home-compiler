@@ -128,6 +128,29 @@ def gerar_cpp(node, nivel=0, declarados=None):
         case "alerta_agua":
             return f'{ind}std::cout << "[AGUA] {node["mensagem"]}" << std::endl;'
         
+        case "repetir":
+            corpo = "\n".join(gerar_cpp(i, nivel + 1, declarados) for i in node["corpo"])
+            return (
+                f"{ind}for (int _i = 0; _i < {node['vezes']}; _i++) {{\n"
+                f"{corpo}\n{ind}}}"
+            )
+
+        case "cena":
+            nome_func = "cena_" + node["nome"].replace(" ", "_").replace("-", "_")
+            corpo = "\n".join(gerar_cpp(i, nivel + 1, declarados) for i in node["corpo"])
+            return (
+                f"{ind}auto {nome_func} = [&]() {{\n"
+                f"{corpo}\n{ind}}};\n"
+                f"{ind}{nome_func}();"
+            )
+
+        case "agendar":
+            cmd_cpp = gerar_cpp(node["comando"], nivel + 1, declarados)
+            return (
+                f"{ind}agendarTarefa(\"{node['hora']}\", [&]() {{\n"
+                f"{cmd_cpp}\n{ind}}});"
+            )
+
         case "condicional":
             op    = MAPA_COMPARADORES[node["comparador"]]
             valor = node["valor"]["valor"]

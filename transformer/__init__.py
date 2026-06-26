@@ -108,6 +108,22 @@ def transformer(tree):
             }
         case "bloco":
             return [transformer(c) for c in tree.children]
+
+        case "repetir":
+            vezes = int(float(str(tree.children[0])))
+            corpo = [transformer(c) for c in tree.children[1:]]
+            return {"acao": "repetir", "vezes": vezes, "corpo": corpo}
+
+        case "cena":
+            nome = str(tree.children[0]).strip('"')
+            corpo = [transformer(c) for c in tree.children[1:]]
+            return {"acao": "cena", "nome": nome, "corpo": corpo}
+
+        case "agendar":
+            comando = transformer(tree.children[0])
+            hora = str(tree.children[1])
+            return {"acao": "agendar", "hora": hora, "comando": comando}
+
         case "start":
             return [transformer(filho) for filho in tree.children]
         case _:

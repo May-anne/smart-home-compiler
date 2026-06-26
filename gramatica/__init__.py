@@ -5,6 +5,7 @@ from gramatica.deteccao_intrusao import REGRAS_INTRUSIONDETECTOR
 from gramatica.energia import REGRAS_ENERGIA
 from gramatica.agua import REGRAS_AGUA
 from gramatica.device import REGRAS_DEVICE
+from gramatica.estruturas import REGRAS_ESTRUTURAS
 
 TOKENS_COMPARTILHADOS = r"""
     IDENTIFICADOR: /[a-zA-Z_][a-zA-Z0-9_]*/
@@ -28,6 +29,9 @@ REGRA_START = r"""
              | comando_energia
              | comando_agua
              | condicional
+             | repetir
+             | cena
+             | agendar
     condicional: "SE" IDENTIFICADOR COMPARADOR valor "ENTAO" bloco "SENAO" bloco "FIM"
     valor: TEXTO
            | NUMERO
@@ -43,5 +47,6 @@ GRAMATICA_COMPLETA = (
     + REGRAS_INTRUSIONDETECTOR
     + REGRAS_ENERGIA
     + REGRAS_AGUA
+    + REGRAS_ESTRUTURAS
     + REGRA_START
 )

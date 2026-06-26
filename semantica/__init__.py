@@ -4,7 +4,6 @@ from semantica.semantica_temperatura import semantica_temperatura
 from semantica.semantica_luminosidade import semantica_luminosidade
 from semantica.semantica_energia import semantica_energia
 from semantica.semantica_agua import semantica_agua
-from copy import copy
 
 COMPARADORES_POR_TIPO = {
     "FECHADURA": {"=="},
@@ -147,6 +146,27 @@ def semantica_base(node, declarados, senha_validada=None):
             | "alerta_agua"
         ):
             semantica_agua(node, declarados)
+
+        case "repetir":
+            if node["vezes"] < 1:
+                raise Exception(
+                    f"O número de repetições deve ser maior que zero, "
+                    f"mas foi '{node['vezes']}'."
+                )
+            for item in node["corpo"]:
+                semantica_base(item, declarados, senha_validada)
+            node["tipo"] = "void"
+
+        case "cena":
+            if not node["nome"]:
+                raise Exception("O nome da cena não pode ser vazio.")
+            for item in node["corpo"]:
+                semantica_base(item, declarados, senha_validada)
+            node["tipo"] = "void"
+
+        case "agendar":
+            semantica_base(node["comando"], declarados, senha_validada)
+            node["tipo"] = "void"
 
         case "condicional":
             if node["alvo"] not in declarados:
