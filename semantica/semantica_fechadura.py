@@ -9,11 +9,6 @@ def semantica_fechadura(node, declarados, senha_validada):
 
         case "trancar":
             checar_declaracao(node["nome"], "FECHADURA", declarados)
-            if node["nome"] not in senha_validada:
-                raise Exception(
-                    f"{node['nome']}: é preciso informar a senha antes de TRANCAR."
-                )
-            del senha_validada[node["nome"]]
             node["tipo"] = "void"
 
         case "destrancar":

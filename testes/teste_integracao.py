@@ -203,7 +203,6 @@ def test_pipeline_luminosidade_falha_valor_negativo():
 def test_pipeline_fechadura_fluxo_trancar():
     nodes, declarados, _ = pipeline("""
     device porta { type FECHADURA; }
-    INFORMAR_SENHA_FECHADURA porta COM SENHA "segredo"
     TRANCAR porta
     """)
     assert declarados["porta"] == "FECHADURA"
@@ -225,13 +224,6 @@ def test_pipeline_fechadura_alerta():
     """)
     assert nodes[-1]["acao"] == "alerta"
 
-
-def test_pipeline_fechadura_falha_trancar_sem_senha():
-    with pytest.raises(Exception, match="senha"):
-        pipeline("""
-        device porta { type FECHADURA; }
-        TRANCAR porta
-        """)
 
 
 def test_pipeline_fechadura_falha_destrancar_sem_senha():
